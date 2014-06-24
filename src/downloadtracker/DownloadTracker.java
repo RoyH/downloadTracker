@@ -13,6 +13,17 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 /**
  *
@@ -23,16 +34,18 @@ public class DownloadTracker {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException, XPathExpressionException, Exception {
         //Code section to read in from stored data
 
         //initialize components
         entryCollection collection = new entryCollection();
         collection = readFile(collection);
-        collection.output();
-        storeData(collection);
+        //collection.output();
+        //storeData(collection);
         //Code section to output data
-        loadData(collection);
+        //loadData(collection);
+        ArrayList<String[]> lookup = parseXML("litopia.xml");
+        //System.out.println((lookup.get(1))[2]);
 
     }
 
@@ -167,5 +180,94 @@ public class DownloadTracker {
 
         br.close();
         
+    }
+    
+    
+    
+     public static ArrayList<String[]> parseXML(String path)
+            throws ParserConfigurationException, SAXException,
+            IOException, XPathExpressionException, Exception {
+
+
+
+
+        DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
+        domFactory.setNamespaceAware(true); // important line
+        DocumentBuilder builder = domFactory.newDocumentBuilder();
+        Document doc = builder.parse(path);
+
+        XPathFactory factory = XPathFactory.newInstance();
+        XPath xpath = factory.newXPath();
+        // experimental XPATH query that will extract URL's
+        // seems to work...
+
+
+        XPathExpression expr = xpath.compile("//item/enclosure/@url"); // XPATH QUERY.
+        //second XPathExpression
+        XPathExpression expr2 = xpath.compile("//item/title/text()");
+
+
+        Object result = expr.evaluate(doc, XPathConstants.NODESET);
+        NodeList nodes = (NodeList) result;
+        
+        Object result2 = expr2.evaluate(doc, XPathConstants.NODESET);
+        NodeList nodes2 = (NodeList) result2;
+        
+
+        //System.out.println("Parsed XML file sucessfully.. Displaying Results");
+
+        //for (int i = 0; i < nodes.getLength(); i++) {
+          //System.out.println(nodes.item(i).getNodeValue());
+        // OUTPUT urls.
+         //}
+
+        //initiallize output arraylist
+        ArrayList<String[]> output = new ArrayList();
+
+        try {
+            // FileWriter outFile = new FileWriter(args[0]);
+            PrintWriter out = new PrintWriter("output.txt");
+
+            // Also could be written as follows on one line
+            // Printwriter out = new PrintWriter(new FileWriter(args[0]));
+            // Write text to file
+
+            //out.println("This is line 1");
+            
+            String[] data = new String[3];
+
+            for (int i = 0; i < nodes.getLength(); i++) {
+                //saves it to output.txt for debugging
+                //out.println(nodes.item(i).getNodeValue());
+                //saves to arraylist
+                
+                //elimate most of the URL to just get filename.
+                String tempString = nodes.item(i).getNodeValue();
+                // reduces to just filename
+                tempString = tempString.substring(tempString.lastIndexOf("/") + 1, tempString.length()-4);
+                // now split into 2 parts prefix + epnum to keep data coherence
+                String[] temp = new String[2];
+                temp = tempString.split("_");
+                //System.out.println(temp[0] + " " + temp[1]);
+                
+                data[0] = temp[0];
+                data[1] = temp[1];
+                data[2] = nodes2.item(i).getNodeValue();
+                
+                
+                output.add(data);
+                // OUTPUT urls.
+            }
+
+
+
+
+
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        
+        return output;
     }
 }
