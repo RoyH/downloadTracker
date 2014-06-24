@@ -13,6 +13,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -40,12 +43,25 @@ public class DownloadTracker {
         //initialize components
         entryCollection collection = new entryCollection();
         collection = readFile(collection);
+        
+        //Code something smart to remove duplicates.
+        
+        
         //collection.output();
+
         //storeData(collection);
         //Code section to output data
         //loadData(collection);
-        ArrayList<String[]> lookup = parseXML("litopia.xml");
-        //System.out.println((lookup.get(1))[2]);
+        String[][] lookup = parseXML("litopia.xml");
+
+
+        collection.resolve(lookup);
+        //collection.output();
+        System.out.println(collection.list.size());
+        
+        collection.removeDuplicates();
+        System.out.println(collection.list.size());
+        collection.output();
 
     }
 
@@ -143,7 +159,7 @@ public class DownloadTracker {
         ArrayList<entry> output = collection.returnArray();
         //outputs data in format ip*name*epnum*date to make easier to parse back
         for (entry en : output) {
-           
+
             out.println(en.getString());
         }
         out.close();
@@ -162,29 +178,28 @@ public class DownloadTracker {
         String line = null;
         while ((line = br.readLine()) != null) {
             //start parsing the data. 
-            String[] cache = new String[4];
+            String[] cache = new String[5];
             try {
-                 cache = line.split("-");
+                cache = line.split("-");
             } catch (Exception e) {
             }
-            
-                    
+
+
             String ipAddress = cache[0];
             String Show = cache[1];
             String epNum = cache[2];
             String timeStamp = cache[3];
-            
-           
-            System.out.println(ipAddress + " " + Show + " " + epNum + " " + timeStamp);
-        }
+            String EpisodeName = cache[4];
 
+
+            System.out.println(ipAddress + " " + Show + " " + epNum + " " + timeStamp + " " + EpisodeName);
+        }
+        //Still need to STORE DATA INTO THE COLLECTION
         br.close();
-        
+
     }
-    
-    
-    
-     public static ArrayList<String[]> parseXML(String path)
+
+    public static String[][] parseXML(String path)
             throws ParserConfigurationException, SAXException,
             IOException, XPathExpressionException, Exception {
 
@@ -209,20 +224,21 @@ public class DownloadTracker {
 
         Object result = expr.evaluate(doc, XPathConstants.NODESET);
         NodeList nodes = (NodeList) result;
-        
+
         Object result2 = expr2.evaluate(doc, XPathConstants.NODESET);
         NodeList nodes2 = (NodeList) result2;
-        
+
 
         //System.out.println("Parsed XML file sucessfully.. Displaying Results");
 
         //for (int i = 0; i < nodes.getLength(); i++) {
-          //System.out.println(nodes.item(i).getNodeValue());
+        //System.out.println(nodes.item(i).getNodeValue());
         // OUTPUT urls.
-         //}
+        //}
 
         //initiallize output arraylist
-        ArrayList<String[]> output = new ArrayList();
+        String[][] output = new String[3][nodes.getLength()];
+
 
         try {
             // FileWriter outFile = new FileWriter(args[0]);
@@ -232,30 +248,28 @@ public class DownloadTracker {
             // Printwriter out = new PrintWriter(new FileWriter(args[0]));
             // Write text to file
 
-            //out.println("This is line 1");
-            
-            String[] data = new String[3];
+
 
             for (int i = 0; i < nodes.getLength(); i++) {
                 //saves it to output.txt for debugging
                 //out.println(nodes.item(i).getNodeValue());
-                //saves to arraylist
-                
+                //saves to array
+
                 //elimate most of the URL to just get filename.
                 String tempString = nodes.item(i).getNodeValue();
                 // reduces to just filename
-                tempString = tempString.substring(tempString.lastIndexOf("/") + 1, tempString.length()-4);
+                tempString = tempString.substring(tempString.lastIndexOf("/") + 1, tempString.length() - 4);
                 // now split into 2 parts prefix + epnum to keep data coherence
                 String[] temp = new String[2];
                 temp = tempString.split("_");
-                //System.out.println(temp[0] + " " + temp[1]);
-                
-                data[0] = temp[0];
-                data[1] = temp[1];
-                data[2] = nodes2.item(i).getNodeValue();
-                
-                
-                output.add(data);
+
+
+                output[0][i] = temp[0];
+                output[1][i] = temp[1];
+                output[2][i] = nodes2.item(i).getNodeValue();
+                //System.out.println(data[0] + " " + data[1] + " " + data[2]);
+                out.println(output[0][i] + " " + output[1][i] + " " + output[2][i]);
+
                 // OUTPUT urls.
             }
 
@@ -267,7 +281,12 @@ public class DownloadTracker {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
+
         return output;
+    }
+
+    public static entryCollection  removeDuplicates(entryCollection collection ) {
+        
+        return collection;
     }
 }
