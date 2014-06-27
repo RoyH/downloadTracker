@@ -42,26 +42,22 @@ public class DownloadTracker {
 
         //initialize components
         entryCollection collection = new entryCollection();
-        collection = readFile(collection);
-        
-        //Code something smart to remove duplicates.
-        
-        
-        //collection.output();
-
-        //storeData(collection);
-        //Code section to output data
-        //loadData(collection);
+        //collection = readFile(collection);
+        //generate lookup table
         String[][] lookup = parseXML("litopia.xml");
 
-
+        collection = loadData(collection);
+        readFile(collection);
+        //optimise resolve
         collection.resolve(lookup);
-        //collection.output();
         System.out.println(collection.list.size());
-        
         collection.removeDuplicates();
         System.out.println(collection.list.size());
-        collection.output();
+        storeData(collection);
+
+
+
+
 
     }
 
@@ -138,7 +134,7 @@ public class DownloadTracker {
             //Print to console code, for debugging purposes
             if (realDownload == true) {
                 //System.out.println(ipAddress + " " + prefix + " " + epNum + " " + timeStamp);
-                collection.addEntry(new entry(prefix, epNum, ipAddress, timeStamp));
+                collection.addEntry(new entry(prefix, epNum, ipAddress, timeStamp, "Unknown"));
             }
 
 
@@ -166,37 +162,40 @@ public class DownloadTracker {
 
     }
 
-    private static void loadData(entryCollection collection) throws IOException {
+    private static entryCollection loadData(entryCollection collection) throws IOException {
         File dir = new File(".");
         File fin = new File(dir.getCanonicalPath() + File.separator + "CollectionData.txt");
+        if (fin.exists()) {
+            FileInputStream fis = new FileInputStream(fin);
 
-        FileInputStream fis = new FileInputStream(fin);
+            //Construct BufferedReader from InputStreamReader
+            BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
-        //Construct BufferedReader from InputStreamReader
-        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+            String line = null;
+            while ((line = br.readLine()) != null) {
+                //start parsing the data. 
+                String[] cache = new String[5];
+                try {
+                    cache = line.split("-");
+                } catch (Exception e) {
+                }
 
-        String line = null;
-        while ((line = br.readLine()) != null) {
-            //start parsing the data. 
-            String[] cache = new String[5];
-            try {
-                cache = line.split("-");
-            } catch (Exception e) {
+
+                String ipAddress = cache[0];
+                String Show = cache[1];
+                String epNum = cache[2];
+                String timeStamp = cache[3];
+                String EpisodeName = cache[4];
+
+                entry en = new entry(Show, epNum, ipAddress, timeStamp,EpisodeName);
+                collection.addEntry(en);
+                //System.out.println(ipAddress + " " + Show + " " + epNum + " " + timeStamp + " " + EpisodeName);
             }
-
-
-            String ipAddress = cache[0];
-            String Show = cache[1];
-            String epNum = cache[2];
-            String timeStamp = cache[3];
-            String EpisodeName = cache[4];
-
-
-            System.out.println(ipAddress + " " + Show + " " + epNum + " " + timeStamp + " " + EpisodeName);
+            //Still need to store data into collection
+            br.close();
+            
         }
-        //Still need to STORE DATA INTO THE COLLECTION
-        br.close();
-
+        return collection;
     }
 
     public static String[][] parseXML(String path)
@@ -285,8 +284,8 @@ public class DownloadTracker {
         return output;
     }
 
-    public static entryCollection  removeDuplicates(entryCollection collection ) {
-        
+    public static entryCollection removeDuplicates(entryCollection collection) {
+
         return collection;
     }
 }
