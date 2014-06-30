@@ -54,7 +54,13 @@ public class DownloadTracker {
         collection.removeDuplicates();
         System.out.println(collection.list.size());
         storeData(collection);
+        collection.resolveDate();
 
+        // Now write statistic generation side
+        for (int i = 0; i < lookup[0].length; i++) {
+            System.out.println(lookup[2][i]+ " - " + collection.returnStatsShow(null, null, lookup[0][i], Integer.parseInt(lookup[1][i])));
+        }
+        
 
 
 
@@ -187,13 +193,13 @@ public class DownloadTracker {
                 String timeStamp = cache[3];
                 String EpisodeName = cache[4];
 
-                entry en = new entry(Show, epNum, ipAddress, timeStamp,EpisodeName);
+                entry en = new entry(Show, epNum, ipAddress, timeStamp, EpisodeName);
                 collection.addEntry(en);
                 //System.out.println(ipAddress + " " + Show + " " + epNum + " " + timeStamp + " " + EpisodeName);
             }
             //Still need to store data into collection
             br.close();
-            
+
         }
         return collection;
     }
@@ -282,10 +288,5 @@ public class DownloadTracker {
         }
 
         return output;
-    }
-
-    public static entryCollection removeDuplicates(entryCollection collection) {
-
-        return collection;
     }
 }
